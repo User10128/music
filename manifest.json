@@ -1,0 +1,17 @@
+{
+  "name": "Relax & Focus Ambient Player",
+  "short_name": "Relax",
+  "description": "A mindful ambience and curated music player.",
+  "start_url": "./omnimind_ai_studio.html",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#14b8a6",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='40' fill='%2314b8a6' opacity='0.9'/%3E%3Ccircle cx='50' cy='50' r='18' fill='%230f172a'/%3E%3C/svg%3E",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
