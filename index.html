@@ -89,19 +89,16 @@
     <div id="bg-container" class="absolute inset-0 w-full h-full bg-cover bg-center z-0 transition-opacity duration-1000" style="background-image: url('https://photographylife.com/wp-content/uploads/2016/06/Mass.jpg');">
     </div>
 
-    <!-- YouTube Dynamic Player Container (Now acts as Video Background) -->
-    <div id="player-container" class="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-10 opacity-0 transition-opacity duration-1000">
-        <!-- Scale up slightly to hide youtube letterboxing/branding borders -->
-        <div class="absolute top-1/2 left-1/2 min-w-[120vw] min-h-[120vh] w-auto h-auto transform -translate-x-1/2 -translate-y-1/2">
-            <div id="player" class="w-full h-full pointer-events-none"></div>
-        </div>
+    <!-- Soft ambient dark gradient for subtle depth (Moved behind the video player) -->
+    <div class="absolute inset-0 bg-gradient-to-tr from-slate-950/80 via-slate-950/40 to-slate-950/80 pointer-events-none z-10"></div>
+
+    <!-- YouTube Dynamic Player Container (Now contained in a centered glass panel area) -->
+    <div id="player-container" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-4xl aspect-video glass-panel rounded-3xl overflow-hidden z-20 opacity-0 transition-all duration-1000 shadow-[0_0_50px_rgba(0,0,0,0.6)] border border-white/10">
+        <div id="player" class="w-full h-full pointer-events-none"></div>
     </div>
 
-    <!-- Soft ambient dark gradient for subtle depth -->
-    <div class="absolute inset-0 bg-gradient-to-tr from-slate-950/70 via-slate-950/30 to-slate-950/70 pointer-events-none z-20"></div>
-
     <!-- Main Dynamic Interface -->
-    <div class="absolute inset-0 p-8 flex flex-col justify-between pointer-events-none">
+    <div class="absolute inset-0 p-8 flex flex-col justify-between pointer-events-none z-30">
         
         <!-- Top Row: Time, Temp & Status Widget -->
         <div class="flex items-start justify-between w-full">
@@ -141,7 +138,7 @@
         <div class="flex items-end justify-between w-full relative">
             <div class="text-left text-slate-400/60 text-xs hidden md:block leading-relaxed">
                 <p>Right click anywhere to edit albums and access more commands.</p>
-                <p>Keyboard: Space (Play), Arrows (Skip/Vol), M (Mute), L (Lyrics).</p>
+                <p>Keyboard: Space (Play), Arrows (Skip/Vol), M (Mute), L (Lyrics), V (Toggle Video).</p>
             </div>
 
             <!-- Tracklist Dropup Panel (Sits directly above the player widget) -->
@@ -563,6 +560,12 @@
                     e.preventDefault();
                     toggleLyricsOverlay();
                     break;
+                case 'v':
+                case 'V':
+                    e.preventDefault();
+                    isVideoPanelEnabled = !isVideoPanelEnabled;
+                    updateVideoVisibility();
+                    break;
             }
         });
 
@@ -636,6 +639,7 @@
         // Custom UI State
         let isMusicPlaying = false;
         let apiReady = false;
+        let isVideoPanelEnabled = false;
         var player;
 
         // Load Playlist Manager Elements
@@ -1245,12 +1249,25 @@
             progressInterval = setInterval(updateProgressBar, 500);
         }
 
-        function onPlayerStateChange(event) {
-            // When playing, reveal the dynamic video container and hide fallback image
-            if (event.data === YT.PlayerState.PLAYING) {
-                document.getElementById('player-container').style.opacity = '1';
-                document.getElementById('bg-container').style.opacity = '0';
+        function updateVideoVisibility() {
+            const playerContainer = document.getElementById('player-container');
+            const bgContainer = document.getElementById('bg-container');
+            
+            // Check if player exists and is currently playing
+            const isPlaying = player && typeof player.getPlayerState === 'function' && player.getPlayerState() === YT.PlayerState.PLAYING;
+
+            if (isVideoPanelEnabled && isPlaying) {
+                playerContainer.style.opacity = '1';
+                bgContainer.style.opacity = '0.4';
+            } else {
+                playerContainer.style.opacity = '0';
+                bgContainer.style.opacity = '1';
             }
+        }
+
+        function onPlayerStateChange(event) {
+            // Re-evaluate visibility based on the current state and "V" key toggle
+            updateVideoVisibility();
             
             // When a track finishes playing natively (State 0)
             if (event.data === YT.PlayerState.ENDED) {
