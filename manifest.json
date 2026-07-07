@@ -1,6 +1,6 @@
 {
-  "name": "Relax & Focus Ambient Player",
-  "short_name": "Relax",
+  "name": "Music & Video",
+  "short_name": "Play Media",
   "description": "A mindful ambience and curated music player.",
   "start_url": "/",
   "display": "standalone",
