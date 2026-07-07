@@ -2,7 +2,7 @@ const CACHE_NAME = 'relax-focus-v1';
 
 // Files to cache for offline availability
 const ASSETS_TO_CACHE = [
-    './omnimind_ai_studio.html',
+    './index.html',
     './manifest.json'
 ];
 
