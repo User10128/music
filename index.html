@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Music & Video</title>
+    <title>Relax & Focus</title>
     
     <!-- Perfect Simple Favicon (Teal Zen Ring) -->
     <link rel="icon" href="/favicon.png">
@@ -126,13 +126,19 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Gentle branding mark -->
+            <div class="text-right hidden md:block">
+                <span class="font-serif italic text-lg text-white/80 block">Relax by Checkers Labs</span>
+                <span class="text-[9px] uppercase tracking-widest text-white/40 block mt-0.5">Mindful Ambience</span>
+            </div>
         </div>
 
         <!-- Bottom Row: Dynamic Control Center -->
         <div class="flex items-end justify-between w-full relative">
             <div class="text-left text-slate-400/60 text-xs hidden md:block leading-relaxed">
                 <p>Right click anywhere to edit albums and access more commands.</p>
-                <p>Keyboard: Space (Play), Left/Right Arrows (Skip), L (Lyrics), V (Toggle Video).</p>
+                <p>Keyboard: Space (Play), Arrows (Skip/Vol), M (Mute), L (Lyrics), V (Toggle Video).</p>
             </div>
 
             <!-- Tracklist Dropup Panel (Sits directly above the player widget) -->
@@ -498,26 +504,61 @@
 
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
-            // Ignore input if in text field
-            if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
-            
+            // Ignore if focus is in an input field
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // Don't intercept normal shortcuts if modifiers are pressed
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+            const currentPlaylist = getCurrentPlaylist();
+
             switch (e.key) {
                 case ' ':
                     e.preventDefault();
-                    playPauseBtn.click();
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    if (typeof playPrevious === 'function') playPrevious();
+                    if (isMusicPlaying) pauseMusic();
+                    else if (currentPlaylist.length > 0) playMusic();
                     break;
                 case 'ArrowRight':
                     e.preventDefault();
-                    if (typeof playNext === 'function') playNext();
+                    if (currentPlaylist.length > 0) {
+                        let next = (currentTrackIndex + 1) % currentPlaylist.length;
+                        loadTrack(next);
+                        playMusic();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    if (currentPlaylist.length > 0) {
+                        let prev = (currentTrackIndex - 1 + currentPlaylist.length) % currentPlaylist.length;
+                        loadTrack(prev);
+                        playMusic();
+                    }
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (player && typeof player.getVolume === 'function') {
+                        let vol = player.getVolume();
+                        let newVol = Math.min(100, vol + 5);
+                        player.setVolume(newVol);
+                    }
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (player && typeof player.getVolume === 'function') {
+                        let vol = player.getVolume();
+                        let newVol = Math.max(0, vol - 5);
+                        player.setVolume(newVol);
+                    }
+                    break;
+                case 'm':
+                case 'M':
+                    e.preventDefault();
+                    toggleMute();
                     break;
                 case 'l':
                 case 'L':
                     e.preventDefault();
-                    if (typeof toggleLyricsOverlay === 'function') toggleLyricsOverlay();
+                    toggleLyricsOverlay();
                     break;
                 case 'v':
                 case 'V':
@@ -527,6 +568,73 @@
                     break;
             }
         });
+
+        function toggleMute() {
+            if (player && typeof player.isMuted === 'function') {
+                if (player.isMuted()) {
+                    player.unMute();
+                } else {
+                    player.mute();
+                }
+            }
+        }
+
+        // Context Menu Handlers
+        document.getElementById('btn-ctx-edit').addEventListener('click', () => {
+            openPlaylistModal();
+            menu.classList.add('hidden');
+        });
+
+        document.getElementById('btn-ctx-album').addEventListener('click', () => {
+            if (albums.length > 1) {
+                currentAlbumIndex = (currentAlbumIndex + 1) % albums.length;
+                albumSelector.value = currentAlbumIndex;
+                albumSelector.dispatchEvent(new Event('change'));
+            }
+            menu.classList.add('hidden');
+        });
+
+        document.getElementById('btn-ctx-song').addEventListener('click', () => {
+            const cp = getCurrentPlaylist();
+            if (cp.length > 1) {
+                let next = (currentTrackIndex + 1) % cp.length;
+                loadTrack(next);
+                playMusic();
+            }
+            menu.classList.add('hidden');
+        });
+
+        document.getElementById('btn-ctx-mute').addEventListener('click', () => {
+            toggleMute();
+            menu.classList.add('hidden');
+        });
+
+        document.getElementById('btn-ctx-lyrics').addEventListener('click', () => {
+            toggleLyricsOverlay();
+            menu.classList.add('hidden');
+        });
+
+        document.getElementById('btn-ctx-other').addEventListener('click', (e) => {
+            e.stopPropagation(); // Keep menu open
+            document.getElementById('ctx-other-menu').classList.toggle('hidden');
+        });
+
+        // --- 5. Albums & Track Manager Logic ---
+        const STORAGE_KEY_ALBUMS = 'zenscape_albums_v2';
+        const STORAGE_KEY_LEGACY = 'zenscape_playlist_v1';
+
+        let albums = [
+            {
+                id: 'default-album',
+                name: 'Default Ambience',
+                tracks: [
+                    { id: 'Kr_b-9rn_Ag', title: 'Relaxing Piano Pop', desc: 'Curated Ambient Stream' }
+                ]
+            }
+        ];
+        
+        let currentAlbumIndex = 0;
+        let currentTrackIndex = 0;
 
         // Custom UI State
         let isMusicPlaying = false;
