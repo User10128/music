@@ -2,7 +2,7 @@
   "name": "Relax & Focus Ambient Player",
   "short_name": "Relax",
   "description": "A mindful ambience and curated music player.",
-  "start_url": "./omnimind_ai_studio.html",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#020617",
   "theme_color": "#14b8a6",
